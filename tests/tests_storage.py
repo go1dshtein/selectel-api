@@ -23,7 +23,7 @@ class TestsStorage(unittest.TestCase):
         h = self.storage.put("unittest", "/test1.file", self.data)
         self.assertEquals(h["etag"], self.etag)
         l = self.storage.list("unittest", "/")
-        self.assertEquals(l["test1.file"]["hash"], self.etag)
+        self.assertEquals(l["/test1.file"]["hash"], self.etag)
         d = self.storage.get("unittest", "/test1.file")
         self.assertEquals(self.data, d[0])
         self.assertEquals(self.etag, d[1]["etag"])
@@ -37,7 +37,6 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(self.etag, d[1]["etag"])
 
     def test_copy(self):
-        self.storage.create("unittest")
         h = self.storage.put("unittest", "/test3.file", self.data)
         self.assertEquals(h["etag"], self.etag)
         self.storage.copy("unittest", "/test3.file", "/test4.file")
@@ -45,8 +44,18 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(self.data, d[0])
         self.assertEquals(self.etag, d[1]["etag"])
 
+    def test_list(self):
+        self.storage.put("unittest", "/test5.file", self.data)
+        self.storage.put("unittest", "/test6.file", self.data)
+        self.storage.put("unittest", "/dir/test7.file", self.data)
+        l1 = self.storage.list("unittest", "/")
+        self.assertEquals(set(["/test5.file", "/test6.file"]), set(l1.keys()))
+        l2 = self.storage.list("unittest", "/dir")
+        self.assertEquals(["/dir/test7.file"], l2.keys())
+        l3 = self.storage.list("unittest")
+        self.assertEquals(set(["/dir/test7.file",
+                               "/test5.file", "/test6.file"]),
+                          set(l3.keys()))
+
     def tearDown(self):
-        l = self.storage.list("unittest", "/")
-        for filename in l.keys():
-            self.storage.remove("unittest", "/" + filename)
-        self.storage.drop("unittest")
+        self.storage.drop("unittest", force=True, recursive=True)

@@ -45,14 +45,16 @@ class Storage(object):
         self.session.headers.update({"X-Auth-Token": self.auth.token})
 
     @update_expired
-    def list(self, container, path):
+    def list(self, container, path=None):
         url = "%s/%s" % (self.auth.storage, container)
-        if path.startswith("/"):
-            path = path[1:]
-        params = {"format": "json", "path": path}
+        params = {"format": "json"}
+        if not path is None:
+            if path.startswith("/"):
+                path = path[1:]
+            params["path"] = path
         r = self.session.get(url, params=params, verify=True)
         r.raise_for_status()
-        return {x["name"]: x for x in r.json()}
+        return {"/" + x["name"]: x for x in r.json()}
 
     @update_expired
     def get(self, container, path, headers=None):
@@ -147,8 +149,11 @@ class Storage(object):
         return r.headers
 
     @update_expired
-    def drop(self, container, force=False):
+    def drop(self, container, force=False, recursive=False):
         url = "%s/%s" % (self.auth.storage, container)
+        if recursive:
+            for filename in self.list(container):
+                self.remove(container, filename, force=force)
         r = self.session.delete(url, verify=True)
         if force:
             if r.status_code == 404:
