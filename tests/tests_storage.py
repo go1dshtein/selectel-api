@@ -51,5 +51,21 @@ class TestsStorage(unittest.TestCase):
                                "/test5.file", "/test6.file"]),
                           set(l3.keys()))
 
+    def test_info(self):
+        self.storage.put("unittest", "/test8.file", self.data)
+        self.storage.put("unittest", "/test9.file", self.data)
+        info = self.storage.info("unittest")
+        self.assertEquals(info["count"], 2)
+        self.assertEquals(info["public"], False)
+        self.assertTrue("tx" in info)
+        self.assertTrue("rx" in info)
+        self.assertTrue("usage" in info)
+        info = self.storage.info("unittest", "/test9.file")
+        self.assertEquals(info["downloads"], 0)
+        self.assertEquals(self.etag, info["hash"])
+        self.assertEquals(info["content-length"], len(self.data))
+        self.assertTrue("content-type" in info)
+        self.assertTrue("last-modified" in info)
+
     def tearDown(self):
         self.storage.drop("unittest", force=True, recursive=True)

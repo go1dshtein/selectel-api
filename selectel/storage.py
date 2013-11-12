@@ -131,6 +131,32 @@ class Storage(object):
         r.raise_for_status()
 
     @update_expired
+    def info(self, container, path=None):
+        if path is None:
+            url = "%s/%s" % (self.auth.storage, container)
+        else:
+            url = "%s/%s%s" % (self.auth.storage, container, path)
+        r = self.session.head(url, verify=True)
+        r.raise_for_status()
+        if path is None:
+            result = {
+                "count": int(r.headers["X-Container-Object-Count"]),
+                "usage": int(r.headers["X-Container-Bytes-Used"]),
+                "public": (r.headers.get("X-Container-Meta-Type") == "public"),
+                "tx": int(r.headers["X-Transfered-Bytes"]),
+                "rx": int(r.headers["X-Received-Bytes"])
+            }
+        else:
+            result = {
+                "content-length": int(r.headers["Content-Length"]),
+                "last-modified": r.headers["Last-Modified"],
+                "hash": r.headers["ETag"],
+                "content-type": r.headers["Content-Type"],
+                "downloads": int(r.headers["X-Object-Downloads"])
+            }
+        return result
+
+    @update_expired
     def create(self, container, public=False, headers=None):
         url = "%s/%s" % (self.auth.storage, container)
         if headers is None:
