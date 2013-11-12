@@ -18,7 +18,7 @@ class Storage(object):
 
         def __init__(self, token, storage, expires):
             self.token = token
-            self.storage = storage
+            self.storage = storage[:-1]
             self.expires = datetime.now() + timedelta(seconds=int(expires))
 
         def expired(self):
@@ -46,7 +46,9 @@ class Storage(object):
 
     @update_expired
     def list(self, container, path):
-        url = "%s%s/" % (self.auth.storage, container)
+        url = "%s/%s" % (self.auth.storage, container)
+        if path.startswith("/"):
+            path = path[1:]
         params = {"format": "json", "path": path}
         r = self.session.get(url, params=params, verify=True)
         r.raise_for_status()
@@ -54,7 +56,7 @@ class Storage(object):
 
     @update_expired
     def get(self, container, path, headers=None):
-        url = "%s%s/%s" % (self.auth.storage, container, path)
+        url = "%s/%s%s" % (self.auth.storage, container, path)
         if headers is None:
             headers = {}
         r = self.session.get(url, headers=headers, verify=True)
@@ -63,7 +65,7 @@ class Storage(object):
 
     @update_expired
     def get_stream(self, container, path, headers=None, chunk=2**20):
-        url = "%s%s/%s" % (self.auth.storage, container, path)
+        url = "%s/%s%s" % (self.auth.storage, container, path)
         if headers is None:
             headers = {}
         r = self.session.get(url, headers=headers, stream=True, verify=True)
@@ -72,7 +74,7 @@ class Storage(object):
 
     @update_expired
     def put(self, container, path, content, headers=None):
-        url = "%s%s/%s" % (self.auth.storage, container, path)
+        url = "%s/%s%s" % (self.auth.storage, container, path)
         if headers is None:
             headers = {}
         headers["ETag"] = hashlib.md5(content).hexdigest()
@@ -83,7 +85,7 @@ class Storage(object):
     @update_expired
     def save_stream(self, container, path, descriptor,
                     headers=None, chunk=2**20):
-        url = "%s%s/%s" % (self.auth.storage, container, path)
+        url = "%s/%s%s" % (self.auth.storage, container, path)
         if headers is None:
             headers = {}
 
@@ -99,7 +101,7 @@ class Storage(object):
 
     @update_expired
     def save_file(self, container, path, filename, headers=None):
-        url = "%s%s/%s" % (self.auth.storage, container, path)
+        url = "%s/%s%s" % (self.auth.storage, container, path)
         if headers is None:
             headers = {}
         with open(filename, 'r+b') as file:
@@ -109,7 +111,7 @@ class Storage(object):
 
     @update_expired
     def remove(self, container, path, force=False):
-        url = "%s%s/%s" % (self.auth.storage, container, path)
+        url = "%s/%s%s" % (self.auth.storage, container, path)
         r = self.session.delete(url, verify=True)
         if force:
             if r.status_code == 404:
@@ -122,11 +124,37 @@ class Storage(object):
 
     @update_expired
     def copy(self, container, src, dst, headers=None):
-        dst = "%s%s/%s" % (self.auth.storage, container, dst)
-        src = "%s/%s" % (container, src)
+        dst = "%s/%s%s" % (self.auth.storage, container, dst)
+        src = "%s%s" % (container, src)
         if headers is None:
             headers = {}
         headers["X-Copy-From"] = src
         r = self.session.put(dst, headers=headers, verify=True)
         r.raise_for_status()
+        return r.headers
+
+    @update_expired
+    def create(self, container, public=False, headers=None):
+        url = "%s/%s" % (self.auth.storage, container)
+        if headers is None:
+            headers = {}
+        if public:
+            headers["X-Container-Meta-Type"] = "public"
+        else:
+            headers["X-Container-Meta-Type"] = "private"
+        r = self.session.put(url, headers=headers, verify=True)
+        r.raise_for_status()
+        return r.headers
+
+    @update_expired
+    def drop(self, container, force=False):
+        url = "%s/%s" % (self.auth.storage, container)
+        r = self.session.delete(url, verify=True)
+        if force:
+            if r.status_code == 404:
+                return r.headers
+            else:
+                r.raise_for_status()
+        else:
+            r.raise_for_status()
         return r.headers
