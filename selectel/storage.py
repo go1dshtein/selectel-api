@@ -54,7 +54,19 @@ class Storage(object):
             params["path"] = path
         r = self.session.get(url, params=params, verify=True)
         r.raise_for_status()
-        return {"/" + x["name"]: x for x in r.json()}
+
+        def mapper(obj):
+            dt = datetime.strptime(obj["last_modified"] + " GMT",
+                                   "%Y-%m-%dT%H:%M:%S.%f %Z")
+            result = {
+                "content-type": obj["content_type"],
+                "content-length": obj["bytes"],
+                "hash": obj["hash"],
+                "last-modified": dt
+            }
+            return result
+
+        return {"/" + x["name"]: mapper(x) for x in r.json()}
 
     @update_expired
     def get(self, container, path, headers=None):
@@ -147,9 +159,11 @@ class Storage(object):
                 "rx": int(r.headers["X-Received-Bytes"])
             }
         else:
+            dt = datetime.strptime(r.headers["Last-Modified"],
+                                   "%a, %d %b %Y %H:%M:%S %Z")
             result = {
                 "content-length": int(r.headers["Content-Length"]),
-                "last-modified": r.headers["Last-Modified"],
+                "last-modified": dt,
                 "hash": r.headers["ETag"],
                 "content-type": r.headers["Content-Type"],
                 "downloads": int(r.headers["X-Object-Downloads"])
@@ -187,7 +201,7 @@ class Storage(object):
 class Container(object):
     METHODS = ["list", "get", "get_stream", "put",
                "save_stream", "save_file", "remove",
-               "copy"]
+               "copy", "info"]
 
     def __init__(self, auth, key, name):
         self.name = name
