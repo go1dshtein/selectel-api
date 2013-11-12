@@ -158,3 +158,22 @@ class Storage(object):
         else:
             r.raise_for_status()
         return r.headers
+
+
+class Container(object):
+    METHODS = ["list", "get", "get_stream", "put",
+               "save_stream", "save_file", "remove",
+               "copy"]
+
+    def __init__(self, auth, key, name):
+        self.name = name
+        self.storage = Storage(auth, key)
+
+        def make_method(name):
+            def method(*args, **kwargs):
+                fn = getattr(self.storage, name)
+                return fn(self.name, *args, **kwargs)
+            return method
+
+        for name in self.METHODS:
+            setattr(self, name, make_method(name))
