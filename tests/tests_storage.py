@@ -27,9 +27,23 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(self.data, d)
         self.storage.remove("unittest", "/test1.file")
 
-    def test_save_file(self):
-        self.storage.save_file("unittest", "/test2.file", __file__)
+    def test_put_file(self):
+        self.storage.put_file("unittest", "/test2.file", __file__)
         d = self.storage.get("unittest", "/test2.file")
+        self.assertEquals(self.data, d)
+
+    def test_put_stream(self):
+        self.storage.put_stream("unittest", "/test2.file",
+                                open(__file__, 'r+b'), chunk=256)
+        d = self.storage.get("unittest", "/test2.file")
+        self.assertEquals(self.data, d)
+
+    def test_get_stream(self):
+        self.storage.put("unittest", "/test2.file", self.data)
+        d = ""
+        for chunk in self.storage.get_stream("unittest", "/test2.file",
+                                             chunk=256):
+            d += chunk
         self.assertEquals(self.data, d)
 
     def test_copy(self):

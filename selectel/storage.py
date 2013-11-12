@@ -96,8 +96,8 @@ class Storage(object):
         r.raise_for_status()
 
     @update_expired
-    def save_stream(self, container, path, descriptor,
-                    headers=None, chunk=2**20):
+    def put_stream(self, container, path, descriptor,
+                   headers=None, chunk=2**20):
         url = "%s/%s%s" % (self.auth.storage, container, path)
         if headers is None:
             headers = {}
@@ -112,7 +112,7 @@ class Storage(object):
         r.raise_for_status()
 
     @update_expired
-    def save_file(self, container, path, filename, headers=None):
+    def put_file(self, container, path, filename, headers=None):
         url = "%s/%s%s" % (self.auth.storage, container, path)
         if headers is None:
             headers = {}
@@ -200,7 +200,7 @@ class Storage(object):
 
 class Container(object):
     METHODS = ["list", "get", "get_stream", "put",
-               "save_stream", "save_file", "remove",
+               "put_stream", "put_file", "remove",
                "copy", "info"]
 
     def __init__(self, auth, key, name):
