@@ -20,29 +20,23 @@ class TestsStorage(unittest.TestCase):
         self.storage.create("unittest")
 
     def test_content(self):
-        h = self.storage.put("unittest", "/test1.file", self.data)
-        self.assertEquals(h["etag"], self.etag)
+        self.storage.put("unittest", "/test1.file", self.data)
         l = self.storage.list("unittest", "/")
         self.assertEquals(l["/test1.file"]["hash"], self.etag)
         d = self.storage.get("unittest", "/test1.file")
-        self.assertEquals(self.data, d[0])
-        self.assertEquals(self.etag, d[1]["etag"])
+        self.assertEquals(self.data, d)
         self.storage.remove("unittest", "/test1.file")
 
     def test_save_file(self):
-        h = self.storage.save_file("unittest", "/test2.file", __file__)
-        self.assertEquals(h["etag"], self.etag)
+        self.storage.save_file("unittest", "/test2.file", __file__)
         d = self.storage.get("unittest", "/test2.file")
-        self.assertEquals(self.data, d[0])
-        self.assertEquals(self.etag, d[1]["etag"])
+        self.assertEquals(self.data, d)
 
     def test_copy(self):
-        h = self.storage.put("unittest", "/test3.file", self.data)
-        self.assertEquals(h["etag"], self.etag)
+        self.storage.put("unittest", "/test3.file", self.data)
         self.storage.copy("unittest", "/test3.file", "/test4.file")
         d = self.storage.get("unittest", "/test4.file")
-        self.assertEquals(self.data, d[0])
-        self.assertEquals(self.etag, d[1]["etag"])
+        self.assertEquals(self.data, d)
 
     def test_list(self):
         self.storage.put("unittest", "/test5.file", self.data)

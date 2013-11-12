@@ -63,7 +63,7 @@ class Storage(object):
             headers = {}
         r = self.session.get(url, headers=headers, verify=True)
         r.raise_for_status()
-        return (r.content, r.headers)
+        return r.content
 
     @update_expired
     def get_stream(self, container, path, headers=None, chunk=2**20):
@@ -72,7 +72,7 @@ class Storage(object):
             headers = {}
         r = self.session.get(url, headers=headers, stream=True, verify=True)
         r.raise_for_status()
-        return (r.headers, r.iter_content(chunk_size=chunk))
+        return r.iter_content(chunk_size=chunk)
 
     @update_expired
     def put(self, container, path, content, headers=None):
@@ -82,7 +82,6 @@ class Storage(object):
         headers["ETag"] = hashlib.md5(content).hexdigest()
         r = self.session.put(url, data=content, headers=headers, verify=True)
         r.raise_for_status()
-        return r.headers
 
     @update_expired
     def save_stream(self, container, path, descriptor,
@@ -99,7 +98,6 @@ class Storage(object):
 
         r = self.session.put(url, data=gen(), headers=headers, verify=True)
         r.raise_for_status()
-        return r.headers
 
     @update_expired
     def save_file(self, container, path, filename, headers=None):
@@ -109,7 +107,6 @@ class Storage(object):
         with open(filename, 'r+b') as file:
             r = self.session.put(url, data=file, headers=headers, verify=True)
             r.raise_for_status()
-            return r.headers
 
     @update_expired
     def remove(self, container, path, force=False):
@@ -122,7 +119,6 @@ class Storage(object):
                 r.raise_for_status()
         else:
             r.raise_for_status()
-        return r.headers
 
     @update_expired
     def copy(self, container, src, dst, headers=None):
@@ -133,7 +129,6 @@ class Storage(object):
         headers["X-Copy-From"] = src
         r = self.session.put(dst, headers=headers, verify=True)
         r.raise_for_status()
-        return r.headers
 
     @update_expired
     def create(self, container, public=False, headers=None):
@@ -146,7 +141,6 @@ class Storage(object):
             headers["X-Container-Meta-Type"] = "private"
         r = self.session.put(url, headers=headers, verify=True)
         r.raise_for_status()
-        return r.headers
 
     @update_expired
     def drop(self, container, force=False, recursive=False):
@@ -157,12 +151,11 @@ class Storage(object):
         r = self.session.delete(url, verify=True)
         if force:
             if r.status_code == 404:
-                return r.headers
+                pass
             else:
                 r.raise_for_status()
         else:
             r.raise_for_status()
-        return r.headers
 
 
 class Container(object):
