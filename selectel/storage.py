@@ -22,7 +22,7 @@ class Storage(object):
             self.expires = datetime.now() + timedelta(seconds=int(expires))
 
         def expired(self):
-            left = datetime.now() - self.expires
+            left = self.expires - datetime.now()
             return (left.total_seconds() < self.THRESHOLD)
 
     def __init__(self, user, key):
