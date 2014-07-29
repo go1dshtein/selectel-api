@@ -27,7 +27,7 @@ class Tox(TestCommand):
 
 
 setup(name='selectel-api',
-      version='0.1.1',
+      version='0.1.2',
       description='Simple selectel API',
       author='Kirill Goldshtein',
       author_email='goldshtein.kirill@gmail.com',
