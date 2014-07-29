@@ -11,16 +11,16 @@ For handle containers you should use global selectel credentials:
 	>>> from selectel.storage import Storage
 	>>> storage = Storage(auth, key)
 
-You can create public and private containers with specific [headers](https://support.selectel.ru/storage/api_info/#cors):	
+You can create public and private containers with specific [headers](https://support.selectel.ru/storage/api_info/#cors):
 
 	>>> storage.create("mycontainer")
 	>>> headers = {"X-Container-Meta-Access-Control-Request-Method": "HEAD, GET"}
 	>>> storage.create("mypubliccontainer", public=True, headers=headers)
-	
+
 and drop it:
 
 	>>> storage.drop("mypubliccontainer")
-	
+
 Use `storage.drop("mypubliccontainer", recursive=True)` for dropping nonempty container.
 
 #### Working with objects inside container ####
@@ -29,23 +29,23 @@ For working with objects you can use container specific credentials:
 
 	>>> from selectel.storage import Container
 	>>> container = Container(auth_container, key_container, "mycontainer")
-	
+
 You can add objects from content:
 
-	>>> container.put("/test1.file", "something")
+	>>> container.put("/test1.file", b"something")
 
 from file:
 
 	>>> container.put_file("/test2.file", "./test.zip")
-	
+
 or from readable stream:
 
 	>>> container.put_stream("/dir/test3.file", open("./test.zip", "r+b"))
-	
+
 Optionally you can add specific headers:
 
 	>>> container.put_stream("/dir/test3.file", open("./test.zip", "r+b"), headers={"Content-Type": "application/zip"})
-	
+
 API allows to get some info about container and objects inside it:
 
 	>>> container.list().keys()
@@ -70,14 +70,14 @@ or as stream:
 
 	>>> for chunk in container.get_stream("/test2.file", chunk=2**15):
 	...     print len(chunk)
-	... 
+	...
 	32768
 	32768
 	32768
 	3670
-	
+
 And last that you can do:
-	
+
 	>>> container.copy("/dir/test3.file", "/test4.file")
 	>>> container.list("/").keys()
 	[u'/test4.file', u'/test1.file', u'/test2.file']
@@ -88,7 +88,7 @@ And last that you can do:
 ### Running tests ###
 
 Add file **tests/credentials.json**  with your credentials:
-	
+
 	{
 		"auth": "my-selectel-login",
 		"key": "my-selectel-password"
@@ -99,4 +99,4 @@ Then, run
 	python setup.py test
 
 **Note**, that tests uses **unittest** container.
-	
+

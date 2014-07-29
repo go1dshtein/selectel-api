@@ -14,7 +14,7 @@ class TestsStorage(unittest.TestCase):
             self.auth = credentials["auth"]
             self.key = credentials["key"]
         self.storage = Storage(self.auth, self.key)
-        with open(__file__) as file:
+        with open(__file__, "rb") as file:
             self.data = file.read()
         self.etag = hashlib.md5(self.data).hexdigest()
         self.storage.create("unittest")
@@ -40,7 +40,7 @@ class TestsStorage(unittest.TestCase):
 
     def test_get_stream(self):
         self.storage.put("unittest", "/test2.file", self.data)
-        d = ""
+        d = b""
         for chunk in self.storage.get_stream("unittest", "/test2.file",
                                              chunk=256):
             d += chunk
@@ -59,7 +59,7 @@ class TestsStorage(unittest.TestCase):
         l1 = self.storage.list("unittest", "/")
         self.assertEquals(set(["/test5.file", "/test6.file"]), set(l1.keys()))
         l2 = self.storage.list("unittest", "/dir")
-        self.assertEquals(["/dir/test7.file"], l2.keys())
+        self.assertEquals(["/dir/test7.file"], list(l2.keys()))
         l3 = self.storage.list("unittest")
         self.assertEquals(set(["/dir/test7.file",
                                "/test5.file", "/test6.file"]),
