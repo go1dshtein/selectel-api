@@ -96,7 +96,5 @@ Add file **tests/credentials.json**  with your credentials:
 
 Then, run
 
-	python setup.py test
-
-**Note**, that tests uses **tox** and **discover**.
+	tox
 
