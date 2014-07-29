@@ -98,5 +98,5 @@ Then, run
 
 	python setup.py test
 
-**Note**, that tests uses **unittest** container.
+**Note**, that tests uses **tox** and **discover**.
 
