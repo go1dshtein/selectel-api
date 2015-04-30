@@ -3,6 +3,8 @@ import os
 import json
 import unittest
 import hashlib
+import tarfile
+import io
 from selectel.storage import Storage
 
 
@@ -80,6 +82,51 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(info["content-length"], len(self.data))
         self.assertTrue("content-type" in info)
         self.assertTrue("last-modified" in info)
+
+    def test_archive(self):
+        self.storage.put("unittest", "/test5.file", self.data[:100])
+        self.storage.put("unittest", "/test6.file", self.data[:100])
+        self.storage.put("unittest", "/dir/test7.file", self.data[:100])
+        self.storage.put("unittest", "/dir/test8.file", self.data[:100])
+        archive = self.create_archive()
+        self.storage.put("unittest", "/", archive, extract="tar.gz")
+        l1 = self.storage.list("unittest", "/")
+        self.assertEquals(
+            set(["/test5.file", "/test6.file", "/test9.file"]), set(l1.keys()))
+        l2 = self.storage.list("unittest", "/dir")
+        self.assertEquals(
+            set(["/dir/test7.file", "/dir/test8.file", "/dir/test10.file"]),
+            set(l2.keys()))
+        d1 = self.storage.get("unittest", "/test9.file")
+        self.assertEquals(self.data, d1)
+        d2 = self.storage.get("unittest", "/dir/test7.file")
+        self.assertEquals(self.data, d2)
+        d3 = self.storage.get("unittest", "/test6.file")
+        self.assertEquals(self.data, d3)
+        d4 = self.storage.get("unittest", "/dir/test10.file")
+        self.assertEquals(self.data, d4)
+        d5 = self.storage.get("unittest", "/dir/test8.file")
+        self.assertEquals(self.data[:100], d5)
+        d6 = self.storage.get("unittest", "/test5.file")
+        self.assertEquals(self.data[:100], d6)
+
+    def create_archive(self):
+        buffer = io.BytesIO()
+        archive = tarfile.open(mode="w:gz", fileobj=buffer)
+        fileobj = open(__file__, "r+b")
+        for name in ["/test9.file", "/dir/test7.file",
+                     "/dir/test10.file", "test6.file"]:
+            archive.addfile(
+                archive.gettarinfo(
+                    arcname=name,
+                    fileobj=fileobj),
+                fileobj=fileobj)
+            fileobj.seek(0)
+        archive.close()
+        fileobj.close()
+        with open("archive.tar.gz", "wb") as h:
+            h.write(buffer.getvalue())
+        return buffer.getvalue()
 
     def tearDown(self):
         self.storage.drop("unittest", force=True, recursive=True)

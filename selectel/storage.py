@@ -5,6 +5,8 @@ import requests
 
 
 class Storage(object):
+    SUPPORTED_ARCHIVES = ("tar", "tar.gz", "tar.bz2")
+
     def update_expired(fn):
         def wrapper(*args, **kwargs):
             auth = args[0].auth
@@ -48,7 +50,7 @@ class Storage(object):
     def list(self, container, path=None):
         url = "%s/%s" % (self.auth.storage, container)
         params = {"format": "json"}
-        if not path is None:
+        if path is not None:
             if path.startswith("/"):
                 path = path[1:]
             params["path"] = path
@@ -87,18 +89,23 @@ class Storage(object):
         return r.iter_content(chunk_size=chunk)
 
     @update_expired
-    def put(self, container, path, content, headers=None):
+    def put(self, container, path, content, headers=None, extract=None):
         url = "%s/%s%s" % (self.auth.storage, container, path)
+        if extract in self.SUPPORTED_ARCHIVES:
+            url += "?extract-archive=%s" % extract
         if headers is None:
             headers = {}
-        headers["ETag"] = hashlib.md5(content).hexdigest()
+        if not extract:
+            headers["ETag"] = hashlib.md5(content).hexdigest()
         r = self.session.put(url, data=content, headers=headers, verify=True)
         r.raise_for_status()
 
     @update_expired
     def put_stream(self, container, path, descriptor,
-                   headers=None, chunk=2**20):
+                   headers=None, chunk=2**20, extract=None):
         url = "%s/%s%s" % (self.auth.storage, container, path)
+        if extract in self.SUPPORTED_ARCHIVES:
+            url += "?extract-archive=%s" % extract
         if headers is None:
             headers = {}
 
@@ -112,8 +119,10 @@ class Storage(object):
         r.raise_for_status()
 
     @update_expired
-    def put_file(self, container, path, filename, headers=None):
+    def put_file(self, container, path, filename, headers=None, extract=None):
         url = "%s/%s%s" % (self.auth.storage, container, path)
+        if extract in self.SUPPORTED_ARCHIVES:
+            url += "?extract-archive=%s" % extract
         if headers is None:
             headers = {}
         with open(filename, 'r+b') as file:

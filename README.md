@@ -45,6 +45,10 @@ or from readable stream:
 Optionally you can add specific headers:
 
 	>>> container.put_stream("/dir/test3.file", open("./test.zip", "r+b"), headers={"Content-Type": "application/zip"})
+	
+Also you can use `put*` commands to [extract](https://support.selectel.ru/storage/api_info/#id15) archives(tar, tar.gz, tar.bz2) to container, e.g.:
+
+    >>> container.put_file("/dir", "archive.tar.gz", extract="tar.gz")
 
 API allows to get some info about container and objects inside it:
 
