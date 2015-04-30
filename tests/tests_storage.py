@@ -127,8 +127,6 @@ class TestsStorage(unittest.TestCase):
             fileobj.seek(0)
         archive.close()
         fileobj.close()
-        with open("archive.tar.gz", "wb") as h:
-            h.write(buffer.getvalue())
         return buffer.getvalue()
 
     def tearDown(self):
