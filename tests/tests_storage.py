@@ -91,7 +91,7 @@ class TestsStorage(unittest.TestCase):
         archive = self.create_archive()
         created, errors = self.storage.put(
             "unittest", "/", archive, extract="tar.gz")
-        self.assertEquals(created, 4)
+        self.assertEquals(created, 5)
         self.assertEquals(errors, [])
         l1 = self.storage.list("unittest", "/")
         self.assertEquals(
@@ -112,13 +112,16 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(self.data[:100], d5)
         d6 = self.storage.get("unittest", "/test5.file")
         self.assertEquals(self.data[:100], d6)
+        d7 = self.storage.get("unittest", "/dir1/test11.file")
+        self.assertEquals(self.data, d7)
 
     def create_archive(self):
         buffer = io.BytesIO()
         archive = tarfile.open(mode="w:gz", fileobj=buffer)
         fileobj = open(__file__, "r+b")
         for name in ["/test9.file", "/dir/test7.file",
-                     "/dir/test10.file", "test6.file"]:
+                     "/dir/test10.file", "test6.file",
+                     "/dir1/test11.file"]:
             archive.addfile(
                 archive.gettarinfo(
                     arcname=name,
