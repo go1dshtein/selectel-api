@@ -49,6 +49,9 @@ Optionally you can add specific headers:
 Also you can use `put*` commands to [extract](https://support.selectel.ru/storage/api_info/#id15) archives(tar, tar.gz, tar.bz2) to container, e.g.:
 
     >>> container.put_file("/dir", "archive.tar.gz", extract="tar.gz")
+    (18, [])
+
+In this case put command returns count of created(overwritten) files and list of errors. 
 
 API allows to get some info about container and objects inside it:
 

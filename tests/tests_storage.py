@@ -89,7 +89,10 @@ class TestsStorage(unittest.TestCase):
         self.storage.put("unittest", "/dir/test7.file", self.data[:100])
         self.storage.put("unittest", "/dir/test8.file", self.data[:100])
         archive = self.create_archive()
-        self.storage.put("unittest", "/", archive, extract="tar.gz")
+        created, errors = self.storage.put(
+            "unittest", "/", archive, extract="tar.gz")
+        self.assertEquals(created, 4)
+        self.assertEquals(errors, [])
         l1 = self.storage.list("unittest", "/")
         self.assertEquals(
             set(["/test5.file", "/test6.file", "/test9.file"]), set(l1.keys()))

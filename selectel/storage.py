@@ -91,23 +91,28 @@ class Storage(object):
     @update_expired
     def put(self, container, path, content, headers=None, extract=None):
         url = "%s/%s%s" % (self.auth.storage, container, path)
-        if extract in self.SUPPORTED_ARCHIVES:
-            url += "?extract-archive=%s" % extract
         if headers is None:
             headers = {}
+        if extract in self.SUPPORTED_ARCHIVES:
+            url += "?extract-archive=%s" % extract
+            headers["Accept"] = "application/json"
         if not extract:
             headers["ETag"] = hashlib.md5(content).hexdigest()
         r = self.session.put(url, data=content, headers=headers, verify=True)
         r.raise_for_status()
+        if extract in self.SUPPORTED_ARCHIVES:
+            answer = r.json()
+            return (answer["Number Files Created"], answer["Errors"])
 
     @update_expired
     def put_stream(self, container, path, descriptor,
                    headers=None, chunk=2**20, extract=None):
         url = "%s/%s%s" % (self.auth.storage, container, path)
-        if extract in self.SUPPORTED_ARCHIVES:
-            url += "?extract-archive=%s" % extract
         if headers is None:
             headers = {}
+        if extract in self.SUPPORTED_ARCHIVES:
+            url += "?extract-archive=%s" % extract
+            headers["Accept"] = "application/json"
 
         def gen():
             data = descriptor.read(chunk)
@@ -117,17 +122,24 @@ class Storage(object):
 
         r = self.session.put(url, data=gen(), headers=headers, verify=True)
         r.raise_for_status()
+        if extract in self.SUPPORTED_ARCHIVES:
+            answer = r.json()
+            return (answer["Number Files Created"], answer["Errors"])
 
     @update_expired
     def put_file(self, container, path, filename, headers=None, extract=None):
         url = "%s/%s%s" % (self.auth.storage, container, path)
-        if extract in self.SUPPORTED_ARCHIVES:
-            url += "?extract-archive=%s" % extract
         if headers is None:
             headers = {}
+        if extract in self.SUPPORTED_ARCHIVES:
+            url += "?extract-archive=%s" % extract
+            headers["Accept"] = "application/json"
         with open(filename, 'r+b') as file:
             r = self.session.put(url, data=file, headers=headers, verify=True)
             r.raise_for_status()
+        if extract in self.SUPPORTED_ARCHIVES:
+            answer = r.json()
+            return (answer["Number Files Created"], answer["Errors"])
 
     @update_expired
     def remove(self, container, path, force=False):
