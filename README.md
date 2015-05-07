@@ -1,3 +1,4 @@
+![pypi-version](http://img.shields.io/pypi/v/selectel--api.svg)
 ## selectel-api ##
 
 Simple python module which provide access to [selectel](http://selectel.com) cloud services.
