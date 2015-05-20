@@ -47,13 +47,15 @@ class Storage(object):
         self.session.headers.update({"X-Auth-Token": self.auth.token})
 
     @update_expired
-    def list(self, container, path=None):
+    def list(self, container, path=None, prefix=None):
         url = "%s/%s" % (self.auth.storage, container)
         params = {"format": "json"}
         if path is not None:
             if path.startswith("/"):
                 path = path[1:]
             params["path"] = path
+        if prefix:
+            params["prefix"] = prefix
         r = self.session.get(url, params=params, verify=True)
         r.raise_for_status()
 
