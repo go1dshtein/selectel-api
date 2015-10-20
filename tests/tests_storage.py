@@ -66,6 +66,12 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(set(["/dir/test7.file",
                                "/test5.file", "/test6.file"]),
                           set(l3.keys()))
+        self.storage.put("unittest", "/dir/subdir/test9.file", self.data)
+        self.storage.put("unittest", "/dir/subdir/subdir2/test10.file", self.data)
+        l4 = self.storage.list("unittest", prefix='dir')
+        self.assertEquals(set(["/dir/test7.file",
+                               "/dir/subdir/test9.file", "/dir/subdir/subdir2/test10.file"]),
+                          set(l4.keys()))
 
     def test_info(self):
         self.storage.put("unittest", "/test8.file", self.data)
