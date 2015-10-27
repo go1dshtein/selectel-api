@@ -3,7 +3,7 @@ from setuptools import setup
 
 
 setup(name='selectel-api',
-      version='0.1.3',
+      version='0.1.4',
       description='Simple selectel API',
       author='Kirill Goldshtein',
       author_email='goldshtein.kirill@gmail.com',
