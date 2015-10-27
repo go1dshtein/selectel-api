@@ -103,8 +103,11 @@ class Storage(object):
         r = self.session.put(url, data=content, headers=headers, verify=True)
         r.raise_for_status()
         if extract in self.SUPPORTED_ARCHIVES:
+            assert r.status_code == 200
             answer = r.json()
             return (answer["Number Files Created"], answer["Errors"])
+        else:
+            assert r.status_code == 201
 
     @update_expired
     def put_stream(self, container, path, descriptor,
@@ -125,8 +128,11 @@ class Storage(object):
         r = self.session.put(url, data=gen(), headers=headers, verify=True)
         r.raise_for_status()
         if extract in self.SUPPORTED_ARCHIVES:
+            assert r.status_code == 200
             answer = r.json()
             return (answer["Number Files Created"], answer["Errors"])
+        else:
+            assert r.status_code == 201
 
     @update_expired
     def put_file(self, container, path, filename, headers=None, extract=None):
@@ -140,8 +146,11 @@ class Storage(object):
             r = self.session.put(url, data=file, headers=headers, verify=True)
             r.raise_for_status()
         if extract in self.SUPPORTED_ARCHIVES:
+            assert r.status_code == 200
             answer = r.json()
             return (answer["Number Files Created"], answer["Errors"])
+        else:
+            assert r.status_code == 201
 
     @update_expired
     def remove(self, container, path, force=False):
@@ -150,10 +159,9 @@ class Storage(object):
         if force:
             if r.status_code == 404:
                 return r.headers
-            else:
-                r.raise_for_status()
-        else:
-            r.raise_for_status()
+        r.raise_for_status()
+        assert r.status_code == 204
+        return r.headers
 
     @update_expired
     def copy(self, container, src, dst, headers=None):
@@ -164,6 +172,7 @@ class Storage(object):
         headers["X-Copy-From"] = src
         r = self.session.put(dst, headers=headers, verify=True)
         r.raise_for_status()
+        assert r.status_code == 201
 
     @update_expired
     def info(self, container, path=None):
@@ -173,13 +182,15 @@ class Storage(object):
             url = "%s/%s%s" % (self.auth.storage, container, path)
         r = self.session.head(url, verify=True)
         r.raise_for_status()
+        # XXX: according to documentation code should be 204
+        assert r.status_code == (200 if path else 204)
         if path is None:
             result = {
                 "count": int(r.headers["X-Container-Object-Count"]),
                 "usage": int(r.headers["X-Container-Bytes-Used"]),
                 "public": (r.headers.get("X-Container-Meta-Type") == "public"),
-                "tx": int(r.headers["X-Transfered-Bytes"]),
-                "rx": int(r.headers["X-Received-Bytes"])
+                "tx": int(r.headers.get("X-Transfered-Bytes", 0)),
+                "rx": int(r.headers.get("X-Received-Bytes", 0))
             }
         else:
             dt = datetime.strptime(r.headers["Last-Modified"],
@@ -189,7 +200,7 @@ class Storage(object):
                 "last-modified": dt,
                 "hash": r.headers["ETag"],
                 "content-type": r.headers["Content-Type"],
-                "downloads": int(r.headers["X-Object-Downloads"])
+                "downloads": int(r.headers.get("X-Object-Downloads", 0))
             }
         return result
 
@@ -204,6 +215,7 @@ class Storage(object):
             headers["X-Container-Meta-Type"] = "private"
         r = self.session.put(url, headers=headers, verify=True)
         r.raise_for_status()
+        assert r.status_code in (201, 202)
 
     @update_expired
     def drop(self, container, force=False, recursive=False):
@@ -215,10 +227,8 @@ class Storage(object):
         if force:
             if r.status_code == 404:
                 pass
-            else:
-                r.raise_for_status()
-        else:
-            r.raise_for_status()
+        r.raise_for_status()
+        assert r.status_code == 204
 
 
 class Container(object):

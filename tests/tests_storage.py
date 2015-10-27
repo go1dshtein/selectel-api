@@ -5,6 +5,8 @@ import unittest
 import hashlib
 import tarfile
 import io
+import requests.exceptions
+import time
 from selectel.storage import Storage
 
 
@@ -23,6 +25,7 @@ class TestsStorage(unittest.TestCase):
 
     def test_content(self):
         self.storage.put("unittest", "/test1.file", self.data)
+        time.sleep(5)
         l = self.storage.list("unittest", "/")
         self.assertEquals(l["/test1.file"]["hash"], self.etag)
         d = self.storage.get("unittest", "/test1.file")
@@ -31,17 +34,20 @@ class TestsStorage(unittest.TestCase):
 
     def test_put_file(self):
         self.storage.put_file("unittest", "/test2.file", __file__)
+        time.sleep(5)
         d = self.storage.get("unittest", "/test2.file")
         self.assertEquals(self.data, d)
 
     def test_put_stream(self):
         self.storage.put_stream("unittest", "/test2.file",
                                 open(__file__, 'r+b'), chunk=256)
+        time.sleep(5)
         d = self.storage.get("unittest", "/test2.file")
         self.assertEquals(self.data, d)
 
     def test_get_stream(self):
         self.storage.put("unittest", "/test2.file", self.data)
+        time.sleep(5)
         d = b""
         for chunk in self.storage.get_stream("unittest", "/test2.file",
                                              chunk=256):
@@ -50,6 +56,7 @@ class TestsStorage(unittest.TestCase):
 
     def test_copy(self):
         self.storage.put("unittest", "/test3.file", self.data)
+        time.sleep(5)
         self.storage.copy("unittest", "/test3.file", "/test4.file")
         d = self.storage.get("unittest", "/test4.file")
         self.assertEquals(self.data, d)
@@ -58,6 +65,7 @@ class TestsStorage(unittest.TestCase):
         self.storage.put("unittest", "/test5.file", self.data)
         self.storage.put("unittest", "/test6.file", self.data)
         self.storage.put("unittest", "/dir/test7.file", self.data)
+        time.sleep(5)
         l1 = self.storage.list("unittest", "/")
         self.assertEquals(set(["/test5.file", "/test6.file"]), set(l1.keys()))
         l2 = self.storage.list("unittest", "/dir")
@@ -66,16 +74,21 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(set(["/dir/test7.file",
                                "/test5.file", "/test6.file"]),
                           set(l3.keys()))
-        self.storage.put("unittest", "/dir/subdir/test9.file", self.data)
-        self.storage.put("unittest", "/dir/subdir/subdir2/test10.file", self.data)
+        self.storage.put(
+            "unittest", "/dir/subdir/test9.file", self.data)
+        self.storage.put(
+            "unittest", "/dir/subdir/subdir2/test10.file", self.data)
+        time.sleep(5)
         l4 = self.storage.list("unittest", prefix='dir')
         self.assertEquals(set(["/dir/test7.file",
-                               "/dir/subdir/test9.file", "/dir/subdir/subdir2/test10.file"]),
+                               "/dir/subdir/test9.file",
+                               "/dir/subdir/subdir2/test10.file"]),
                           set(l4.keys()))
 
     def test_info(self):
         self.storage.put("unittest", "/test8.file", self.data)
         self.storage.put("unittest", "/test9.file", self.data)
+        time.sleep(5)
         info = self.storage.info("unittest")
         self.assertEquals(info["count"], 2)
         self.assertEquals(info["public"], False)
@@ -94,6 +107,7 @@ class TestsStorage(unittest.TestCase):
         self.storage.put("unittest", "/test6.file", self.data[:100])
         self.storage.put("unittest", "/dir/test7.file", self.data[:100])
         self.storage.put("unittest", "/dir/test8.file", self.data[:100])
+        time.sleep(5)
         archive = self.create_archive()
         created, errors = self.storage.put(
             "unittest", "/", archive, extract="tar.gz")
@@ -139,4 +153,10 @@ class TestsStorage(unittest.TestCase):
         return buffer.getvalue()
 
     def tearDown(self):
-        self.storage.drop("unittest", force=True, recursive=True)
+        while True:
+            try:
+                self.storage.drop("unittest", force=True, recursive=True)
+            except requests.exceptions.HTTPError:
+                pass
+            else:
+                return
