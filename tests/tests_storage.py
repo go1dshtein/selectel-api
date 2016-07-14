@@ -38,6 +38,13 @@ class TestsStorage(unittest.TestCase):
         d = self.storage.get("unittest", "/test2.file")
         self.assertEquals(self.data, d)
 
+    def test_put_file_with_invalid_token(self):
+        self.storage.auth.token = "random"
+        self.storage.put_file("unittest", "/test_token.file", __file__)
+        time.sleep(5)
+        d = self.storage.get("unittest", "/test_token.file")
+        self.assertEquals(self.data, d)
+
     def test_put_stream(self):
         self.storage.put_stream("unittest", "/test2.file",
                                 open(__file__, 'r+b'), chunk=256)
@@ -67,7 +74,11 @@ class TestsStorage(unittest.TestCase):
         self.storage.put("unittest", "/dir/test7.file", self.data)
         time.sleep(5)
         l1 = self.storage.list("unittest", "/")
-        self.assertEquals(set(["/test5.file", "/test6.file"]), set(l1.keys()))
+
+        self.assertEquals(
+            set(["/test5.file", "/test6.file", "/dir/test7.file"]),
+            set(l1.keys())
+        )
         l2 = self.storage.list("unittest", "/dir")
         self.assertEquals(["/dir/test7.file"], list(l2.keys()))
         l3 = self.storage.list("unittest")
@@ -115,7 +126,10 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(errors, [])
         l1 = self.storage.list("unittest", "/")
         self.assertEquals(
-            set(["/test5.file", "/test6.file", "/test9.file"]), set(l1.keys()))
+            set(["/test5.file", "/test6.file", "/test9.file",
+                 "/dir/test8.file", "/dir/test10.file", "/dir/test7.file",
+                 "/dir1/test11.file"]),
+            set(l1.keys()))
         l2 = self.storage.list("unittest", "/dir")
         self.assertEquals(
             set(["/dir/test7.file", "/dir/test8.file", "/dir/test10.file"]),
