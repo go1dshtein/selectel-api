@@ -18,6 +18,8 @@ class Storage(object):
                 if err.response.status_code == 401:
                     storage.authenticate()
                     return fn(storage, *args, **kwargs)
+                else:
+                    raise err
         return wrapper
 
     class Auth(object):

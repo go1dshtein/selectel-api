@@ -39,7 +39,7 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(self.data, d)
 
     def test_put_file_with_invalid_token(self):
-        self.storage.auth.token = "random"
+        self.storage.session.headers.update({"X-Auth-Token": "random"})
         self.storage.put_file("unittest", "/test_token.file", __file__)
         time.sleep(5)
         d = self.storage.get("unittest", "/test_token.file")
