@@ -8,11 +8,18 @@ class Storage(object):
     SUPPORTED_ARCHIVES = ("tar", "tar.gz", "tar.bz2")
 
     def update_expired(fn):
-        def wrapper(*args, **kwargs):
-            auth = args[0].auth
+        def wrapper(storage, *args, **kwargs):
+            auth = storage.auth
             if auth.expired():
-                args[0].authenticate()
-            return fn(*args, **kwargs)
+                storage.authenticate()
+            try:
+                return fn(storage, *args, **kwargs)
+            except requests.exceptions.HTTPError as err:
+                if err.response.status_code == 401:
+                    storage.authenticate()
+                    return fn(storage, *args, **kwargs)
+                else:
+                    raise err
         return wrapper
 
     class Auth(object):
@@ -103,7 +110,7 @@ class Storage(object):
         r = self.session.put(url, data=content, headers=headers, verify=True)
         r.raise_for_status()
         if extract in self.SUPPORTED_ARCHIVES:
-            assert r.status_code == 200
+            assert r.status_code == 201
             answer = r.json()
             return (answer["Number Files Created"], answer["Errors"])
         else:
