@@ -74,11 +74,7 @@ class TestsStorage(unittest.TestCase):
         self.storage.put("unittest", "/dir/test7.file", self.data)
         time.sleep(5)
         l1 = self.storage.list("unittest", "/")
-
-        self.assertEquals(
-            set(["/test5.file", "/test6.file", "/dir/test7.file"]),
-            set(l1.keys())
-        )
+        self.assertEquals(set(["/test5.file", "/test6.file"]), set(l1.keys()))
         l2 = self.storage.list("unittest", "/dir")
         self.assertEquals(["/dir/test7.file"], list(l2.keys()))
         l3 = self.storage.list("unittest")
@@ -126,10 +122,7 @@ class TestsStorage(unittest.TestCase):
         self.assertEquals(errors, [])
         l1 = self.storage.list("unittest", "/")
         self.assertEquals(
-            set(["/test5.file", "/test6.file", "/test9.file",
-                 "/dir/test8.file", "/dir/test10.file", "/dir/test7.file",
-                 "/dir1/test11.file"]),
-            set(l1.keys()))
+            set(["/test5.file", "/test6.file", "/test9.file"]), set(l1.keys()))
         l2 = self.storage.list("unittest", "/dir")
         self.assertEquals(
             set(["/dir/test7.file", "/dir/test8.file", "/dir/test10.file"]),

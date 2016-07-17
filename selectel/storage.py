@@ -61,6 +61,8 @@ class Storage(object):
             if path.startswith("/"):
                 path = path[1:]
             params["path"] = path
+            if path == "":
+                params["delimiter"] = "/"
         if prefix:
             params["prefix"] = prefix
         r = self.session.get(url, params=params, verify=True)
@@ -77,7 +79,12 @@ class Storage(object):
             }
             return result
 
-        return {"/" + x["name"]: mapper(x) for x in r.json()}
+        clause = (lambda x: path != "" or "subdir" not in x)
+
+        return {
+            "/" + x["name"]: mapper(x) for x in r.json()
+            if clause(x)
+        }
 
     @update_expired
     def get(self, container, path, headers=None):
